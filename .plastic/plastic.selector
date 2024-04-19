@@ -1,0 +1,4 @@
+repository "Projeto3D@jorge_barbosa@cloud"
+  path "/"
+    br "/main"
+    co "/main"
