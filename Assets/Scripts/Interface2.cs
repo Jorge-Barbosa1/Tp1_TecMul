@@ -10,15 +10,16 @@ public class Interface2 : MonoBehaviour
     {
         if( button.name == "SoloButton")
         {
-            SceneManager.LoadScene("Level1");
+            GameMode.IsSinglePlayer = true; 
+            SceneManager.LoadScene("Interface3");
         }
-        else if(button.name == "1v1Button")
+        else if(button.name == "1v1Button") 
         {
-            SceneManager.LoadScene("Level2");
+            GameMode.IsSinglePlayer = false;
+            SceneManager.LoadScene("Interface3");// TODO : PLAY 1v1 Split-Screen
         }else if(button.name == "ExitButton")
         {
             SceneManager.LoadScene("Interface");
         }
     }
 }
-
