@@ -3,22 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-
-public class Interface2 : MonoBehaviour
+public class Interface3 : MonoBehaviour
 {
-    public void SelectGameMode(Button button)
+    public void SelectTrack(Button button)
     {
-        if( button.name == "SoloButton")
+        if( button.name == "Lvl1Button")
         {
             SceneManager.LoadScene("Level1");
         }
-        else if(button.name == "1v1Button")
+        else if(button.name == "Lvl2Button")
         {
             SceneManager.LoadScene("Level2");
+        }
+        else if(button.name == "Lvl3Button") 
+        {
+            SceneManager.LoadScene("Level3");
         }else if(button.name == "ExitButton")
         {
             SceneManager.LoadScene("Interface");
         }
     }
-}
 
+}
