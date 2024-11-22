@@ -2,7 +2,6 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static PlayerController;
 
 public class PlayerController : MonoBehaviour
 {
@@ -10,23 +9,23 @@ public class PlayerController : MonoBehaviour
     public WheelColliders wheelColliders;
     public WheelMeshes wheelMeshes;
 
-    //Inputs
+    // Inputs
     public float gasInput;
     public float steerInput;
     public float brakeInput;
 
-    //Powers
+    // Powers
     public float slipAngle;
     public float brakePower;
     public float motorPower;
 
-    //Speed
+    // Speed
     private float speedTxt;
     private float speed;
     public float maxSpeed;
     private float speedClamped;
 
-    //Save the current Scene
+    // Save the current Scene
     public String CurrentScene;
 
     public AnimationCurve steeringCurve;
@@ -38,7 +37,6 @@ public class PlayerController : MonoBehaviour
     EndLapController end;
     private bool verified;
 
-
     public void Start()
     {
         playerRb = gameObject.GetComponent<Rigidbody>();
@@ -47,7 +45,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        //Restart
+        // Restart
         if (Input.GetKeyDown(KeyCode.R))
         {
             Restart();
@@ -58,12 +56,9 @@ public class PlayerController : MonoBehaviour
             Menu();
         }
 
-
-
-        speedTxt = playerRb.velocity.magnitude*2f;//saber a velocidade a que o carro est�
-
-        //Alterar a forma de saber o speed por causa do som do carro, em vez de saber a velocidade do motor sabemos a velocidade das rodas
-        speed = (float)(wheelColliders.RRWheel.rpm * wheelColliders.RRWheel.radius * 2f * Math.PI / 20f);
+        // Calculate speed
+        speedTxt = playerRb.velocity.magnitude * 3.6f; // Speed in km/h
+        speed = (float)(wheelColliders.RRWheel.rpm * wheelColliders.RRWheel.radius * 2f * Math.PI / 60f); // Speed in m/s
         speedClamped = Mathf.Lerp(speedClamped, speed, Time.deltaTime);
 
         CheckInput();
@@ -72,79 +67,75 @@ public class PlayerController : MonoBehaviour
         ApplyWheelRotation();
         ApplyBrake();
 
-        speedText.text = speedTxt.ToString("F0")+ "Km/h"; //Mostrar o texto com a velocidade
+        speedText.text = $"{speedTxt:F0} Km/h"; // Display speed text
     }
 
-    void ApplySteering()
+void ApplyMotorPower()
+{
+    // Calcular o torque baseado na entrada de aceleração
+    float torque = motorPower * gasInput;
+
+    // Aplicar torque nas rodas traseiras (para frente ou marcha-atrás)
+    if (Mathf.Abs(speed) < maxSpeed || gasInput < 0)
     {
-        float steeringAngle = steerInput * steeringCurve.Evaluate(speed);
-        
-        steeringAngle += Vector3.SignedAngle(transform.forward, playerRb.velocity + transform.forward, Vector3.up);
-        steeringAngle = Mathf.Clamp(steeringAngle, -90f, 90f);
+        wheelColliders.RRWheel.motorTorque = torque;
+        wheelColliders.RLWheel.motorTorque = torque;
 
-        wheelColliders.FRWheel.steerAngle = steeringAngle;
-        wheelColliders.FLWheel.steerAngle = steeringAngle;
+        // Aplicar torque reduzido nas rodas dianteiras
+        wheelColliders.FRWheel.motorTorque = torque * 0.5f;
+        wheelColliders.FLWheel.motorTorque = torque * 0.5f;
     }
-
-    void ApplyMotorPower()
+    else
     {
-        if (speed < maxSpeed)
-        {
-            wheelColliders.RRWheel.motorTorque = motorPower * gasInput;
-            wheelColliders.RLWheel.motorTorque = motorPower * gasInput;
-            wheelColliders.FRWheel.motorTorque = motorPower * gasInput * 0.5f;
-            wheelColliders.FLWheel.motorTorque = motorPower * gasInput * 0.5f;
-        }
-        else
-        {
-            wheelColliders.RRWheel.motorTorque = 0;
-            wheelColliders.RLWheel.motorTorque = 0;
-            wheelColliders.FRWheel.motorTorque = 0;
-            wheelColliders.FLWheel.motorTorque = 0;
-        }
-        
+        // Parar de aplicar torque quando atingir a velocidade máxima
+        wheelColliders.RRWheel.motorTorque = 0;
+        wheelColliders.RLWheel.motorTorque = 0;
+        wheelColliders.FRWheel.motorTorque = 0;
+        wheelColliders.FLWheel.motorTorque = 0;
     }
+}
+
+void ApplySteering()
+{
+    // Determinar o ângulo de direção
+    float steeringAngle = steerInput * steeringCurve.Evaluate(speed);
+
+    // Inverter o ângulo de direção durante a marcha-atrás
+    if (gasInput < 0)
+    {
+        steeringAngle = -steeringAngle;
+    }
+
+    // Ajustar os ângulos para não ultrapassar os limites aceitáveis
+    steeringAngle = Mathf.Clamp(steeringAngle, -30f, 30f);
+
+    // Aplicar o ângulo de direção às rodas dianteiras
+    wheelColliders.FRWheel.steerAngle = steeringAngle;
+    wheelColliders.FLWheel.steerAngle = steeringAngle;
+}
 
 
     void CheckInput()
     {
-        gasInput = Input.GetAxis("Vertical");// WS Seta cima e baixo
-        steerInput = Input.GetAxis("Horizontal");// A,D,<- ,->
+        gasInput = Input.GetAxis("Vertical"); // W/S or Up/Down arrow
+        steerInput = Input.GetAxis("Horizontal"); // A/D or Left/Right arrow
 
-        slipAngle = Vector3.Angle(transform.forward,playerRb.velocity-transform.forward);
+        slipAngle = Vector3.Angle(transform.forward, playerRb.velocity - transform.forward);
 
-
-        if (slipAngle < 120f)
-        { 
-            if (gasInput < 0){ 
-                //brakeInput = 0;
-                brakeInput = Mathf.Abs(gasInput);
-                gasInput = 0;
-            }
-            else
-            {
-                brakeInput = 0;
-            
-            }
-        }
-        else
-        {
-            brakeInput = 0;
-        }
-        
+        // Brake only when Space key is pressed
+        brakeInput = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
     }
 
     void ApplyBrake()
     {
-        wheelColliders.FRWheel.brakeTorque = brakeInput * brakePower * 0.6f;
-        wheelColliders.FLWheel.brakeTorque = brakeInput * brakePower * 0.6f;
+        float brakeTorque = brakeInput * brakePower;
 
-        wheelColliders.RRWheel.brakeTorque = brakeInput * brakePower * 0.4f;
-        wheelColliders.RLWheel.brakeTorque = brakeInput * brakePower * 0.4f;
-
+        wheelColliders.FRWheel.brakeTorque = brakeTorque;
+        wheelColliders.FLWheel.brakeTorque = brakeTorque;
+        wheelColliders.RRWheel.brakeTorque = brakeTorque;
+        wheelColliders.RLWheel.brakeTorque = brakeTorque;
     }
 
-    //Rota��o das rodas
     void ApplyWheelRotation()
     {
         UpdateWheel(wheelColliders.FRWheel, wheelMeshes.FRWheel);
@@ -155,30 +146,26 @@ public class PlayerController : MonoBehaviour
 
     void UpdateWheel(WheelCollider coll, MeshRenderer wheelMesh)
     {
-        Quaternion quat;//"rota��o da roda"?
-        Vector3 position;
-
-        coll.GetWorldPose(out position, out quat);
+        coll.GetWorldPose(out Vector3 position, out Quaternion rotation);
         wheelMesh.transform.position = position;
-        wheelMesh.transform.rotation = quat;
+        wheelMesh.transform.rotation = rotation;
     }
 
     public float GetSpeedRatio()
     {
         var gas = Mathf.Clamp(gasInput, 0.5f, 1f);
-
-        return speedClamped*gas / maxSpeed;
+        return speedClamped * gas / maxSpeed;
     }
 
     void Restart()
     {
-        CurrentScene = SceneManager.GetActiveScene().name; //saber em que scene est�
-        SceneManager.LoadScene(CurrentScene);//Carregar essa scene para dar restart
+        CurrentScene = SceneManager.GetActiveScene().name;
+        SceneManager.LoadScene(CurrentScene);
     }
 
     void Menu()
     {
-        CurrentScene = SceneManager.GetActiveScene().name; //saber em que scene est�
+        CurrentScene = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene("Interface");
     }
 }
@@ -190,7 +177,6 @@ public class WheelColliders
     public WheelCollider FLWheel;
     public WheelCollider RRWheel;
     public WheelCollider RLWheel;
-
 }
 
 [System.Serializable]
@@ -200,6 +186,4 @@ public class WheelMeshes
     public MeshRenderer FLWheel;
     public MeshRenderer RRWheel;
     public MeshRenderer RLWheel;
-
 }
-
