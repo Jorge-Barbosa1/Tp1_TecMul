@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        if (GameSettings.IsSinglePlayer)
+        if (GameMode.IsSinglePlayer)
         {
             // Configurar modo solo
             player1Camera.rect = new Rect(0, 0, 1, 1); // Tela inteira para o jogador 1

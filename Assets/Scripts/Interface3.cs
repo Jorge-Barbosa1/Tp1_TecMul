@@ -7,6 +7,7 @@ public class Interface3  : MonoBehaviour
 {
     public void SelectTrack(Button button)
     {
+        Debug.Log("Is Single Player: " + GameMode.IsSinglePlayer);
         if( button.name == "Lvl1Button")
         {
             SceneManager.LoadScene("Level1");
