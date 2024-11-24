@@ -34,13 +34,16 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] TextMeshProUGUI speedText;
 
-    EndLapController end;
-    private bool verified;
+    public int playerID = 1; // Default player ID
 
     public void Start()
     {
         playerRb = gameObject.GetComponent<Rigidbody>();
         playerRb.centerOfMass = centerMass;
+
+        if(GameMode.IsSinglePlayer && playerID != 1){
+            gameObject.SetActive(false);
+        }
     }
 
     private void Update()
@@ -70,60 +73,79 @@ public class PlayerController : MonoBehaviour
         speedText.text = $"{speedTxt:F0} Km/h"; // Display speed text
     }
 
-void ApplyMotorPower()
-{
-    // Calcular o torque baseado na entrada de aceleração
-    float torque = motorPower * gasInput;
-
-    // Aplicar torque nas rodas traseiras (para frente ou marcha-atrás)
-    if (Mathf.Abs(speed) < maxSpeed || gasInput < 0)
+    void ApplyMotorPower()
     {
-        wheelColliders.RRWheel.motorTorque = torque;
-        wheelColliders.RLWheel.motorTorque = torque;
+        // Calcular o torque baseado na entrada de aceleração
+        float torque = motorPower * gasInput;
 
-        // Aplicar torque reduzido nas rodas dianteiras
-        wheelColliders.FRWheel.motorTorque = torque * 0.5f;
-        wheelColliders.FLWheel.motorTorque = torque * 0.5f;
-    }
-    else
-    {
-        // Parar de aplicar torque quando atingir a velocidade máxima
-        wheelColliders.RRWheel.motorTorque = 0;
-        wheelColliders.RLWheel.motorTorque = 0;
-        wheelColliders.FRWheel.motorTorque = 0;
-        wheelColliders.FLWheel.motorTorque = 0;
-    }
-}
+        // Aplicar torque nas rodas traseiras (para frente ou marcha-atrás)
+        if (Mathf.Abs(speed) < maxSpeed || gasInput < 0)
+        {
+            wheelColliders.RRWheel.motorTorque = torque;
+            wheelColliders.RLWheel.motorTorque = torque;
 
-void ApplySteering()
-{
-    // Determinar o ângulo de direção
-    float steeringAngle = steerInput * steeringCurve.Evaluate(speed);
-
-    // Inverter o ângulo de direção durante a marcha-atrás
-    if (gasInput < 0)
-    {
-        steeringAngle = -steeringAngle;
+            // Aplicar torque reduzido nas rodas dianteiras
+            wheelColliders.FRWheel.motorTorque = torque * 0.5f;
+            wheelColliders.FLWheel.motorTorque = torque * 0.5f;
+        }
+        else
+        {
+            // Parar de aplicar torque quando atingir a velocidade máxima
+            wheelColliders.RRWheel.motorTorque = 0;
+            wheelColliders.RLWheel.motorTorque = 0;
+            wheelColliders.FRWheel.motorTorque = 0;
+            wheelColliders.FLWheel.motorTorque = 0;
+        }
     }
 
-    // Ajustar os ângulos para não ultrapassar os limites aceitáveis
-    steeringAngle = Mathf.Clamp(steeringAngle, -30f, 30f);
+    void ApplySteering()
+    {
+        // Determinar o ângulo de direção
+        float steeringAngle = steerInput * steeringCurve.Evaluate(speed);
 
-    // Aplicar o ângulo de direção às rodas dianteiras
-    wheelColliders.FRWheel.steerAngle = steeringAngle;
-    wheelColliders.FLWheel.steerAngle = steeringAngle;
-}
+        // Inverter o ângulo de direção durante a marcha-atrás
+        if (gasInput < 0)
+        {
+            steeringAngle = -steeringAngle;
+        }
+
+        // Ajustar os ângulos para não ultrapassar os limites aceitáveis
+        steeringAngle = Mathf.Clamp(steeringAngle, -30f, 30f);
+
+        // Aplicar o ângulo de direção às rodas dianteiras
+        wheelColliders.FRWheel.steerAngle = steeringAngle;
+        wheelColliders.FLWheel.steerAngle = steeringAngle;
+    }
 
 
     void CheckInput()
     {
-        gasInput = Input.GetAxis("Vertical"); // W/S or Up/Down arrow
-        steerInput = Input.GetAxis("Horizontal"); // A/D or Left/Right arrow
+        if (GameMode.IsSinglePlayer)
+        {
+            gasInput = Input.GetAxis("Vertical"); // W/S or Up/Down arrow
+            steerInput = Input.GetAxis("Horizontal"); // A/D or Left/Right arrow
+            slipAngle = Vector3.Angle(transform.forward, playerRb.velocity - transform.forward);
+            
+            // Brake only when Space key is pressed
+            brakeInput = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
+        }
+        else
+        {
+            if (playerID == 1)
+            {
+                gasInput = Input.GetKey(KeyCode.W) ? 1.0f : (Input.GetKey(KeyCode.S) ? -1.0f : 0.0f);
+                steerInput = Input.GetKey(KeyCode.A) ? -1.0f : (Input.GetKey(KeyCode.D) ? 1.0f : 0.0f);
+            }
+            else if (playerID == 2)
+            {
+                gasInput = Input.GetKey(KeyCode.UpArrow) ? 1.0f : (Input.GetKey(KeyCode.DownArrow) ? -1.0f : 0.0f);
+                steerInput = Input.GetKey(KeyCode.LeftArrow) ? -1.0f : (Input.GetKey(KeyCode.RightArrow) ? 1.0f : 0.0f);
+            }
+            slipAngle = Vector3.Angle(transform.forward, playerRb.velocity - transform.forward);
 
-        slipAngle = Vector3.Angle(transform.forward, playerRb.velocity - transform.forward);
-
-        // Brake only when Space key is pressed
-        brakeInput = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
+            // Brake only when Space key is pressed for player 1, RightControl for player 2
+            brakeInput = (playerID == 1 && Input.GetKey(KeyCode.Space)) || (playerID == 2 && Input.GetKey(KeyCode.RightControl)) ? 1.0f : 0.0f;
+        }
     }
 
     void ApplyBrake()
