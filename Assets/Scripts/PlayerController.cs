@@ -41,7 +41,8 @@ public class PlayerController : MonoBehaviour
         playerRb = gameObject.GetComponent<Rigidbody>();
         playerRb.centerOfMass = centerMass;
 
-        if(GameMode.IsSinglePlayer && playerID != 1){
+        if (GameMode.IsSinglePlayer && playerID != 1)
+        {
             gameObject.SetActive(false);
         }
     }
@@ -125,7 +126,7 @@ public class PlayerController : MonoBehaviour
             gasInput = Input.GetAxis("Vertical"); // W/S or Up/Down arrow
             steerInput = Input.GetAxis("Horizontal"); // A/D or Left/Right arrow
             slipAngle = Vector3.Angle(transform.forward, playerRb.velocity - transform.forward);
-            
+
             // Brake only when Space key is pressed
             brakeInput = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
         }
@@ -190,6 +191,19 @@ public class PlayerController : MonoBehaviour
         CurrentScene = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene("Interface");
     }
+
+    public void SetInputs(float gas, float steer, float brake, float handbrake = 0)
+    {
+        gasInput = gas;
+        steerInput = steer;
+        brakeInput = brake;
+
+        ApplyMotorPower();
+        ApplySteering();
+        ApplyBrake();
+    }
+
+
 }
 
 [System.Serializable]
