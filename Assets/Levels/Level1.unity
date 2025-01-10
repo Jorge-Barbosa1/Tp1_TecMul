@@ -406,7 +406,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9166537108394109298, guid: 9418e4eb9ae73454d8f696443eff9ebb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4
+      value: -5.35
       objectReference: {fileID: 0}
     - target: {fileID: 9166537108394109298, guid: 9418e4eb9ae73454d8f696443eff9ebb, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1508,9 +1508,17 @@ PrefabInstance:
       value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 3784669413443217782, guid: 9418e4eb9ae73454d8f696443eff9ebb, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2884f3be12f3fb34694f853bddfc12cc, type: 2}
+    - target: {fileID: 3784669413443217782, guid: 9418e4eb9ae73454d8f696443eff9ebb, type: 3}
       propertyPath: m_Materials.Array.data[1]
       value: 
-      objectReference: {fileID: 2100000, guid: 4894cd82e0d96ab42833185f7a15811d, type: 2}
+      objectReference: {fileID: 2100000, guid: 2884f3be12f3fb34694f853bddfc12cc, type: 2}
+    - target: {fileID: 3784669413443217782, guid: 9418e4eb9ae73454d8f696443eff9ebb, type: 3}
+      propertyPath: m_Materials.Array.data[2]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2884f3be12f3fb34694f853bddfc12cc, type: 2}
     - target: {fileID: 6956568067474217814, guid: 9418e4eb9ae73454d8f696443eff9ebb, type: 3}
       propertyPath: maxSpeed
       value: 250
@@ -1533,7 +1541,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9166537108394109298, guid: 9418e4eb9ae73454d8f696443eff9ebb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4
+      value: -5.55
       objectReference: {fileID: 0}
     - target: {fileID: 9166537108394109298, guid: 9418e4eb9ae73454d8f696443eff9ebb, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2054,9 +2062,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab47485b3537164478dce2b3d4c3e5b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 866388926}
-  player1Spawn: {fileID: 840912741}
-  player2Spawn: {fileID: 680986208}
   player1Camera: {fileID: 1555077744}
   player2Camera: {fileID: 1018540616}
 --- !u!4 &1273560366
